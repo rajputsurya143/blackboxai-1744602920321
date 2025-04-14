@@ -3,14 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Shooter Game</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Galactic Defender - Space Shooter Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Orbitron', sans-serif;
+            background: #000 url('https://images.unsplash.com/photo-1506318137071-a8e06380a7a1?q=80&w=2070') no-repeat center center;
+            background-size: cover;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        header {
+            padding: 20px 0;
+        }
+        
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 2.5rem;
+            color: #00fffc;
+            text-shadow: 0 0 10px #00fffc, 0 0 20px #00fffc;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+        
+        .game-container {
+            border: 3px solid #00fffc;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00fffc;
+            margin: 0 auto;
+            width: 90%;
+            max-width: 500px;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            background: #000;
+        }
+        
+        .features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            flex: 1;
+            min-width: 200px;
+            margin: 10px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            border: 1px solid #00fffc;
+        }
+        
+        .feature i {
+            font-size: 2rem;
+            color: #00fffc;
+            margin-bottom: 10px;
+        }
+        
+        .cta {
+            margin: 30px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #00fffc, #0088ff);
+            color: #000;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px #00fffc;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px #00fffc;
+        }
+        
+        footer {
+            margin-top: auto;
+            padding: 20px 0;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-    <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div class="score">Score: <span id="score">0</span></div>
+    <div class="stars" id="stars"></div>
+    <div class="overlay"></div>
+    <div class="container">
+        <header>
+            <h1>GALACTIC DEFENDER</h1>
+            <p class="tagline">The ultimate space shooter experience</p>
+        </header>
+        
+        <div class="game-container">
+            <canvas id="gameCanvas" width="500" height="300"></canvas>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-space-shuttle"></i>
+                <h3>Fast-Paced Action</h3>
+                <p>Engage in intense space battles with responsive controls</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-trophy"></i>
+                <h3>Leaderboards</h3>
+                <p>Compete with players worldwide for the highest score</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-cog"></i>
+                <h3>Upgrade System</h3>
+                <p>Unlock powerful ship upgrades as you progress</p>
+            </div>
+        </div>
+        
+        <div class="cta">
+            <a href="#" class="btn" id="playBtn">
+                <i class="fas fa-play"></i> PLAY NOW
+            </a>
+        </div>
+        
+        <footer>
+            <p>© 2023 Galactic Defender | All Rights Reserved</p>
+        </footer>
     </div>
+
     <script src="game.js"></script>
+    <script>
+        // Create twinkling stars background
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.width = `${Math.random() * 3 + 1}px`;
+            star.style.height = star.style.width;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+            starsContainer.appendChild(star);
+        }
+
+        // Play button functionality
+        document.getElementById('playBtn').addEventListener('click', function() {
+            document.querySelector('.container').style.display = 'none';
+            document.querySelector('.overlay').style.display = 'none';
+            document.getElementById('gameCanvas').style.width = '100%';
+            document.getElementById('gameCanvas').style.height = '100%';
+            document.getElementById('gameCanvas').width = window.innerWidth;
+            document.getElementById('gameCanvas').height = window.innerHeight;
+        });
+    </script>
 </body>
 </html>
