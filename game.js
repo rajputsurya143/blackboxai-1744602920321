@@ -11,6 +11,7 @@ const assets = {
     explosion: new Image()
 };
 
+// Load SVG assets
 assets.player.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZmlsbD0iIzM0OThkYiIgZD0iTTI1IDVMMTAgNDBoMzB6Ii8+PC9zdmc+';
 assets.enemy.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHBhdGggZmlsbD0iI2U3NGMzYyIgZD0iTTE1IDBsMTUgMzBIMHoiLz48L3N2Zz4=';
 assets.bullet.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1IDE1Ij48cmVjdCBmaWxsPSIjZjFjNDBmIiB3aWR0aD0iNSIgaGVpZ2h0PSIxNSIvPjwvc3ZnPg==';
@@ -29,7 +30,7 @@ let score = 0;
 let gameOver = false;
 let comboCount = 0;
 let lastHitTime = 0;
-let lastFireTime = 0;
+let lastFireTime = 0; // Tracks last bullet firing time
 const COMBO_TIMEOUT = 2000; // 2 seconds between hits to maintain combo
 
 // Player object
@@ -56,7 +57,7 @@ const keys = {
     ArrowRight: false,
     ArrowUp: false,
     ArrowDown: false,
-    space: false
+    Space: false
 };
 
 // Event listeners for keyboard
@@ -89,6 +90,7 @@ function updatePlayer() {
     if (keys.ArrowDown && player.y < canvas.height - player.height) {
         player.y += player.speed;
     }
+    
     // Firing with cooldown (200ms) using Space or Up Arrow
     const now = Date.now();
     if ((keys.Space || keys.ArrowUp) && now - lastFireTime > 200) {
@@ -130,16 +132,16 @@ function drawBullets() {
     });
 }
 
-// Enemy types with different point values
+// Enemy types with constant speeds (no difficulty scaling)
 const ENEMY_TYPES = [
-    { width: 30, height: 30, speed: 2, color: '#e74c3c', points: 10 }, // Basic
-    { width: 40, height: 40, speed: 1.5, color: '#f39c12', points: 20 }, // Tank
-    { width: 20, height: 20, speed: 3, color: '#9b59b6', points: 30 } // Fast
+    { width: 30, height: 30, speed: 5, points: 10, health: 1 }, // Basic
+    { width: 40, height: 40, speed: 4, points: 20, health: 2 }, // Tank 
+    { width: 20, height: 20, speed: 7, points: 30, health: 1 }  // Fast
 ];
 
 // Spawn new enemies with different types
 function spawnEnemy() {
-    if (Math.random() < 0.02) {
+    if (Math.random() < 0.1) { // High spawn rate (10% chance per frame)
         const type = Math.floor(Math.random() * ENEMY_TYPES.length);
         const enemyType = ENEMY_TYPES[type];
         
@@ -149,7 +151,6 @@ function spawnEnemy() {
             width: enemyType.width,
             height: enemyType.height,
             speed: enemyType.speed,
-            color: enemyType.color,
             points: enemyType.points,
             type: type
         });
@@ -171,6 +172,22 @@ function updateEnemies() {
 function drawEnemies() {
     enemies.forEach(enemy => {
         ctx.drawImage(assets.enemy, enemy.x, enemy.y, enemy.width, enemy.height);
+        
+        // Draw health bar if enemy has more than 1 health
+        if (enemy.maxHealth > 1) {
+            const healthBarWidth = enemy.width;
+            const healthBarHeight = 5;
+            const healthPercentage = enemy.health / enemy.maxHealth;
+            
+            // Background
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(enemy.x, enemy.y - 8, healthBarWidth, healthBarHeight);
+            
+            // Foreground
+            ctx.fillStyle = healthPercentage > 0.5 ? '#2ecc71' : 
+                          healthPercentage > 0.25 ? '#f39c12' : '#e74c3c';
+            ctx.fillRect(enemy.x, enemy.y - 8, healthBarWidth * healthPercentage, healthBarHeight);
+        }
     });
 }
 
@@ -269,9 +286,13 @@ function isColliding(rect1, rect2) {
            rect1.y + rect1.height > rect2.y;
 }
 
+// Game control variables
+let gameRunning = false;
+let animationFrameId = null;
+
 // Main game loop
 function gameLoop() {
-    if (gameOver) return;
+    if (!gameRunning || gameOver) return;
     
     // Clear canvas
     ctx.fillStyle = 'black';
@@ -295,8 +316,124 @@ function gameLoop() {
     checkCollisions();
     
     // Continue the loop
-    requestAnimationFrame(gameLoop);
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-// Start the game
-gameLoop();
+// Start game function
+function startGame() {
+    // Ensure UI elements exist
+    const container = document.querySelector('.container');
+    const overlay = document.querySelector('.overlay');
+    const canvas = document.getElementById('gameCanvas');
+    
+    if (!container || !overlay || !canvas) {
+        console.error('Missing UI elements');
+        return;
+    }
+
+    // Hide menu and show game
+    container.style.display = 'none';
+    overlay.style.display = 'none';
+    canvas.style.display = 'block';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    if (!gameRunning) {
+        gameRunning = true;
+        resetGame();
+        gameLoop();
+    }
+}
+
+// Make function globally available
+window.startGame = startGame;
+
+// Stop game function
+function stopGame() {
+    gameRunning = false;
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+}
+
+// Game state and assets
+let gameStarted = false;
+const ships = {
+    basic: { color: '#3498db', speed: 5, fireRate: 300 },
+    fast: { color: '#2ecc71', speed: 7, fireRate: 200 },
+    tank: { color: '#e74c3c', speed: 3, fireRate: 500 }
+};
+let currentShip = 'basic';
+let scores = JSON.parse(localStorage.getItem('galacticDefenderScores')) || [];
+
+function initGame() {
+    // Existing initialization code
+    if (!gameStarted) {
+        resetGame();
+    }
+}
+
+function startGame() {
+    // Ensure UI elements are properly hidden/shown
+    const container = document.querySelector('.container');
+    const overlay = document.querySelector('.overlay');
+    const canvas = document.getElementById('gameCanvas');
+    
+    if (container && overlay && canvas) {
+        container.style.display = 'none';
+        overlay.style.display = 'none';
+        canvas.style.display = 'block';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    if (!gameStarted) {
+        gameStarted = true;
+        resetGame();
+        gameLoop();
+        // Hide menu and show game
+        document.querySelector('.container').style.display = 'none';
+        document.querySelector('.overlay').style.display = 'none';
+        document.getElementById('gameCanvas').style.display = 'block';
+    }
+}
+
+function resetGame() {
+    // Reset game state
+    player.x = canvas.width / 2;
+    player.y = canvas.height - 80;
+    bullets = [];
+    enemies = [];
+    explosions = [];
+    score = 0;
+    gameOver = false;
+}
+
+function saveScore() {
+    scores.push({
+        score: score,
+        ship: currentShip,
+        date: new Date().toLocaleString()
+    });
+    scores.sort((a,b) => b.score - a.score);
+    localStorage.setItem('galacticDefenderScores', JSON.stringify(scores));
+}
+
+function setShip(shipType) {
+    if (ships[shipType]) {
+        currentShip = shipType;
+        player.speed = ships[shipType].speed;
+        // Update player appearance based on ship type
+        assets.player.src = `data:image/svg+xml;base64,${btoa(`
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+                <path fill="${ships[shipType].color}" d="M25 5L10 40h30z"/>
+            </svg>
+        `)}`;
+    }
+}
+
+// Initialize ship selection
+setShip('basic');
